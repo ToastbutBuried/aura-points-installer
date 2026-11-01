@@ -1,8 +1,8 @@
 {
-  "version": "4.93.0",
-  "file": "aura-points-4.93.0.jar",
-  "url": "https://github.com/ToastbutBuried/aura-points/releases/download/v4.93.0/aura-points-4.93.0.jar",
-  "sha256": "947b7da226325d3f504a23e7ce92fa74ba6950f548fffaa763a2b29f489a8655",
+  "version": "4.94.0",
+  "file": "aura-points-4.94.0.jar",
+  "url": "https://github.com/ToastbutBuried/aura-points/releases/download/v4.94.0/aura-points-4.94.0.jar",
+  "sha256": "0aa094b04796cd3801059fc4c84c95e39e603207c4340d5096d87553014e510f",
   "requires": [
     {"modid": "geckolib", "name": "GeckoLib", "file": "geckolib-neoforge-1.21.1-4.9.3.jar", "url": "https://cdn.modrinth.com/data/8BmcQJ2H/versions/Grwn5rUB/geckolib-neoforge-1.21.1-4.9.3.jar", "sha256": "20a1995e4074f387ff549e2c57ea79dd7d41ee83c6afb9dd6a6e840e592d1c47"}
   ]
