@@ -4,6 +4,8 @@ An installer that sets up a ready-to-join instance of our server's modpack in yo
 that keeps everyone's Aura Points current. The mod itself (source, releases, `latest.json`) lives in
 [ToastbutBuried/aura-points](https://github.com/ToastbutBuried/aura-points).
 
+**How do I get Aura?** See the [full quest list and other Aura sources](https://github.com/ToastbutBuried/aura-points/blob/main/QUESTS.md).
+
 ## Join the server: one-command installer
 
 **Windows** - download [`install-windows.bat`](https://github.com/ToastbutBuried/aura-points-installer/raw/main/install-windows.bat)
