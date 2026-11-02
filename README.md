@@ -74,8 +74,10 @@ run it and won't start the game.
 ## Keys
 
 Options → Controls → **Aura Points**: **Ability 1 / 2 / 3** (default Left Alt, X, \`) work for every aura -
-each aura puts its abilities on them (`/aura info` shows which is where). **Item Use** and **Item Secondary**
-are for datapack items (see below). Double Jump uses jump.
+each aura puts its abilities on them (`/aura info` shows which is where). **Ultimate** (default V) fires an awakened
+aura's Ultimate. **Item Use**, **Item Secondary** and **Item Tertiary** are for datapack items (see below). Double Jump uses jump.
+If a key you need is unbound or clashes with another key, the mod tells you in chat after joining
+(turn it off: Mods → Aura Points → Config → Feedback → Keybind hint).
 
 ## For datapack makers
 
@@ -85,7 +87,7 @@ Everything is plain vanilla - no mod knowledge needed:
 |---|---|
 | A player's aura | scoreboard `aura_type`: 0 none, 1 Shadow, 2 Water, 3 Fire, 4 Wind, 5 Frost, 6 Verdant, 7 Thunder, 8 Resonance, 9 Earth, 10 Light, 11 Blood, 12 Void |
 | Aura Mastery | scoreboards `aura_mastery_<aura>` (e.g. `aura_mastery_fire`): the player's mastery level 0-5 for every aura; `aura_mastery`: the level of the aura they hold now. Read-only (the mod rewrites them; change levels with `/aura mastery set`) |
-| Item keys | scoreboards `itemuse` and `itemsecondary`: 1 while the player holds the key, 0 otherwise |
+| Item keys | scoreboards `itemuse`, `itemsecondary` and `itemtertiary`: 1 while the player holds the key, 0 otherwise |
 | Ability cooldowns | scoreboards `aura_cd_<ability>` (e.g. `aura_cd_fireball`): ticks left, 0 = ready. Writable: `/scoreboard players set @s aura_cd_fireball 100` = 5s cooldown, `0` = ready right away |
 | Left click (M1) | advancement `aurapoints:toastbutburiedm1` is granted (and taken back) on every left click at air, a block or an entity; its reward runs function `pluss:generalm1` as the player |
 | Accessory slots | slot names `accessory.0` .. `accessory.11` and `accessory.*` work in `/item` and `execute if items`, e.g. `execute if items entity @s accessory.* minecraft:totem_of_undying`. How many are on: `ACCESSORY_SLOTS` in `aurapoints-general.json` (default 2, max 12); `ACCESSORY_SINGLE_ITEM` (default true) = one item per slot, false = whole stacks |
