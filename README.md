@@ -1,21 +1,22 @@
 # Aura Points
 
-Releases of the Aura Points mod (NeoForge 1.21.1) for our server, an installer that sets up a ready-to-join
-instance in your launcher, and a small updater that keeps everyone's Aura Points current.
+An installer that sets up a ready-to-join instance of our server's modpack in your launcher, and a small updater
+that keeps everyone's Aura Points current. The mod itself (source, releases, `latest.json`) lives in
+[ToastbutBuried/aura-points](https://github.com/ToastbutBuried/aura-points).
 
 ## Join the server: one-command installer
 
-**Windows** - download [`install-windows.bat`](https://github.com/ToastbutBuried/aura-points/raw/main/install-windows.bat)
+**Windows** - download [`install-windows.bat`](https://github.com/ToastbutBuried/aura-points-installer/raw/main/install-windows.bat)
 and double-click it, or paste this into PowerShell:
 
 ```powershell
-irm https://raw.githubusercontent.com/ToastbutBuried/aura-points/main/install.ps1 | iex
+irm https://raw.githubusercontent.com/ToastbutBuried/aura-points-installer/main/install.ps1 | iex
 ```
 
 **macOS / Linux** - paste this into a terminal:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/ToastbutBuried/aura-points/main/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/ToastbutBuried/aura-points-installer/main/install.sh | bash
 ```
 
 It asks two things:
@@ -40,8 +41,8 @@ Several launchers on one computer? It lists them and you pick one. CurseForge is
 (https://prismlauncher.org), it's the easiest.
 
 **What it downloads, and from where:** no mod files are stored in this repo. [`modpack.json`](modpack.json) lists
-every mod with its official download link (Modrinth's CDN, FTB's own Maven for the FTB mods, the releases here
-for Aura Points) and its checksum; the installer checks every file against it. It needs **Java 17+** to run - it
+every mod with its official download link (Modrinth's CDN, FTB's own Maven for the FTB mods, the releases of
+[aura-points](https://github.com/ToastbutBuried/aura-points/releases) for Aura Points) and its checksum; the installer checks every file against it. It needs **Java 17+** to run - it
 uses the one that comes with Prism, the Minecraft Launcher or the Modrinth App if you have no Java of your own,
 and if there is none at all it downloads a temporary one (Eclipse Temurin 21) that's deleted afterwards. The
 installer's source is in [`installer/AuraInstaller.java`](installer/AuraInstaller.java).
@@ -50,7 +51,7 @@ installer's source is in [`installer/AuraInstaller.java`](installer/AuraInstalle
 
 The installer does this for you. For an instance you made yourself:
 
-1. Download [`aura-updater.jar`](https://github.com/ToastbutBuried/aura-points/raw/main/aura-updater.jar).
+1. Download [`aura-updater.jar`](https://github.com/ToastbutBuried/aura-points-installer/raw/main/aura-updater.jar).
 2. In Prism, right-click the instance → **Folder**, and put `aura-updater.jar` in that folder
    (the instance folder itself, next to `instance.cfg` - not in `minecraft/` or `mods/`).
 3. Right-click the instance → **Edit** → **Settings** → **Custom commands**, tick the box, and paste
@@ -129,7 +130,7 @@ the game.
 
 | Mod | Version |
 |---|---|
-| Aura Points | the newest release here (the updater keeps it current) |
+| Aura Points | the newest [release](https://github.com/ToastbutBuried/aura-points/releases) (the updater keeps it current) |
 | Player Animator | 2.0.4+1.21.1 |
 | Create | 6.0.10 |
 | Create Aeronautics (bundled) | 1.3.2 |

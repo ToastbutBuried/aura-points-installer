@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
 # Aura Points server installer - Linux and macOS.
 #
-#   curl -fsSL https://raw.githubusercontent.com/ToastbutBuried/aura-points/main/install.sh | bash
+#   curl -fsSL https://raw.githubusercontent.com/ToastbutBuried/aura-points-installer/main/install.sh | bash
 #
 # Finds a Java 17+ (yours, Prism's, the Minecraft Launcher's or the Modrinth App's - or downloads one
 # into a temp folder), then runs aura-installer.jar, which asks for a name and which mods, finds your
 # launcher and makes the instance. Extra arguments are passed on to it (bash -s -- --name "My Server").
 set -e
-RAW=https://raw.githubusercontent.com/ToastbutBuried/aura-points/main
+RAW=https://raw.githubusercontent.com/ToastbutBuried/aura-points-installer/main
 WORK="$(mktemp -d)"
 trap 'rm -rf "$WORK"' EXIT
 

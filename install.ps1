@@ -1,6 +1,6 @@
 # Aura Points server installer - Windows.
 #
-#   irm https://raw.githubusercontent.com/ToastbutBuried/aura-points/main/install.ps1 | iex
+#   irm https://raw.githubusercontent.com/ToastbutBuried/aura-points-installer/main/install.ps1 | iex
 #
 # (or double-click install-windows.bat). Finds a Java 17+ (yours, Prism's, the Minecraft Launcher's or
 # the Modrinth App's - or downloads one into a temp folder), then runs aura-installer.jar, which asks for
@@ -8,7 +8,7 @@
 $ErrorActionPreference = 'Stop'
 $ProgressPreference = 'SilentlyContinue'
 [Net.ServicePointManager]::SecurityProtocol = [Net.ServicePointManager]::SecurityProtocol -bor [Net.SecurityProtocolType]::Tls12
-$raw = 'https://raw.githubusercontent.com/ToastbutBuried/aura-points/main'
+$raw = 'https://raw.githubusercontent.com/ToastbutBuried/aura-points-installer/main'
 $work = Join-Path ([IO.Path]::GetTempPath()) ('aura-install-' + [guid]::NewGuid().ToString('N').Substring(0, 8))
 New-Item -ItemType Directory -Path $work | Out-Null
 

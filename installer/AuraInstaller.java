@@ -37,7 +37,9 @@ import java.util.zip.ZipOutputStream;
  */
 public final class AuraInstaller {
 
-	static final String REPO_RAW = "https://raw.githubusercontent.com/ToastbutBuried/aura-points/main/";
+	static final String REPO_RAW = "https://raw.githubusercontent.com/ToastbutBuried/aura-points-installer/main/";
+	/** The update manifest lives next to the mod's source (ToastbutBuried/aura-points), written by every release. */
+	static final String LATEST = "https://raw.githubusercontent.com/ToastbutBuried/aura-points/main/latest.json";
 	static final String UA = "ToastbutBuried/aura-points-installer";
 	static final HttpClient HTTP = HttpClient.newBuilder().followRedirects(HttpClient.Redirect.NORMAL)
 			.connectTimeout(Duration.ofSeconds(20)).build();
@@ -81,7 +83,7 @@ public final class AuraInstaller {
 
 		// the mod list and the newest Aura Points
 		Map<String, Object> pack = obj(Json.parse(text(ARGS.getOrDefault("manifest", REPO_RAW + "modpack.json"))));
-		Map<String, Object> latest = obj(Json.parse(text(REPO_RAW + "latest.json")));
+		Map<String, Object> latest = obj(Json.parse(text(LATEST)));
 		String mc = str(pack.get("minecraft")), neo = str(pack.get("neoforge"));
 		List<Map<String, Object>> all = new ArrayList<>();
 		for (Object o : list(pack.get("mods"))) all.add(obj(o));
@@ -302,7 +304,7 @@ public final class AuraInstaller {
 	/** The auto-updater jar (checked to be a real jar), or null after saying why it couldn't be fetched. */
 	static byte[] updaterJar() {
 		Exception last = null;
-		for (String url : List.of(REPO_RAW + "aura-updater.jar", "https://github.com/ToastbutBuried/aura-points/raw/main/aura-updater.jar")) {
+		for (String url : List.of(REPO_RAW + "aura-updater.jar", "https://github.com/ToastbutBuried/aura-points-installer/raw/main/aura-updater.jar")) {
 			for (int attempt = 0; attempt < 2; attempt++) {
 				try {
 					byte[] jar = bytes(url);
