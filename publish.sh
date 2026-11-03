@@ -7,18 +7,20 @@ V="$1"; NOTES="${2:-Aura Points $1}"
 HERE="$(cd "$(dirname "$0")" && pwd)"
 MOD=/home/toast/Downloads/aura-points-neoforge
 REPO=ToastbutBuried/aura-points
-JAR=$MOD/build/libs/aura-points-$V.jar
+JAR=$MOD/neoforge/build/libs/aura-points-neoforge-$V.jar
+# the Fabric build goes on the release too (latest.json / installer stay NeoForge)
+FJAR=$MOD/fabric/build/libs/aura-points-fabric-$V.jar
 [ -f "$JAR" ] || { echo "no jar $JAR"; exit 1; }
 cd "$MOD"
 # the release tag must exist on GitHub first (tools/deploy.sh tags; push it here)
 git push -q origin "v$V" 2>/dev/null || true
-~/.local/bin/gh release create "v$V" "$JAR" -R "$REPO" --verify-tag --title "Aura Points $V" --notes "$NOTES"
+~/.local/bin/gh release create "v$V" "$JAR" $( [ -f "$FJAR" ] && printf %q "$FJAR" ) -R "$REPO" --verify-tag --title "Aura Points $V" --notes "$NOTES"
 SHA=$(sha256sum "$JAR" | cut -d' ' -f1)
 cat > latest.json <<JSON
 {
   "version": "$V",
-  "file": "aura-points-$V.jar",
-  "url": "https://github.com/$REPO/releases/download/v$V/aura-points-$V.jar",
+  "file": "aura-points-neoforge-$V.jar",
+  "url": "https://github.com/$REPO/releases/download/v$V/aura-points-neoforge-$V.jar",
   "sha256": "$SHA"$( [ -f "$HERE/requires.json" ] && printf ',\n  "requires": %s' "$(cat "$HERE/requires.json")" )
 }
 JSON
