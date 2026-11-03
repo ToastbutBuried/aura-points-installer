@@ -1,0 +1,6 @@
+[
+    {"modid": "geckolib", "name": "GeckoLib", "side": "both", "file": "geckolib-neoforge-1.21.1-4.9.3.jar", "url": "https://cdn.modrinth.com/data/8BmcQJ2H/versions/Grwn5rUB/geckolib-neoforge-1.21.1-4.9.3.jar", "sha256": "20a1995e4074f387ff549e2c57ea79dd7d41ee83c6afb9dd6a6e840e592d1c47"},
+    {"modid": "puffish_skills", "name": "Pufferfish's Skills", "side": "both", "file": "puffish_skills-0.19.1-1.21-neoforge.jar", "url": "https://cdn.modrinth.com/data/hqQqvaa4/versions/uqAz8XFU/puffish_skills-0.19.1-1.21-neoforge.jar", "sha256": "e37b27e89d997ad39a0d85aae9cfdaa65cfb367f3e13a99013c9d314dd828e87"},
+    {"modid": "puffish_attributes", "name": "Pufferfish's Attributes", "side": "both", "file": "puffish_attributes-0.8.3-1.21-neoforge.jar", "url": "https://cdn.modrinth.com/data/FCFcFw09/versions/ZySEqrUb/puffish_attributes-0.8.3-1.21-neoforge.jar", "sha256": "b21c165e033360e112eb2c3426437e1ba4ebf70f971535b72b1b1891d04c87f0"},
+    {"modid": "playeranimator", "name": "Player Animator", "side": "client", "file": "player-animation-lib-forge-2.0.4+1.21.1.jar", "url": "https://cdn.modrinth.com/data/gedNE4y2/versions/HJZB6bmA/player-animation-lib-forge-2.0.4%2B1.21.1.jar", "sha256": "dbe5de45f5cd60c0e5e47af14e6d564534a98456e973cf670cb881f6938eee92"}
+  ]

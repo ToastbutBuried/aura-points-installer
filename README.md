@@ -1,7 +1,7 @@
 # Aura Points
 
-An installer that sets up a ready-to-join instance of our server's modpack in your launcher, and a small updater
-that keeps everyone's Aura Points current. The mod itself (source, releases, `latest.json`) lives in
+An installer that sets up a ready-to-join instance of our server's modpack in your launcher (or plain Aura Points on
+Fabric), a server installer, and a small updater that keeps everyone's Aura Points current. The mod itself (source, releases, `latest.json`) lives in
 [ToastbutBuried/aura-points](https://github.com/ToastbutBuried/aura-points).
 
 **How do I get Aura?** See the [full quest list and other Aura sources](https://github.com/ToastbutBuried/aura-points/blob/main/QUESTS.md).
@@ -21,10 +21,14 @@ irm https://raw.githubusercontent.com/ToastbutBuried/aura-points-installer/main/
 curl -fsSL https://raw.githubusercontent.com/ToastbutBuried/aura-points-installer/main/install.sh | bash
 ```
 
-It asks two things:
+It asks:
 
-1. **A name** for the new instance (default `Aura Server`).
-2. **Which mods**:
+1. **NeoForge or Fabric.**
+   - **NeoForge** - our server's modpack: everything you need to join the Aura server.
+   - **Fabric** - just Aura Points and what it needs (Fabric API, GeckoLib, Pufferfish's Skills + Attributes,
+     Player Animator), for singleplayer or a Fabric server. It can't join our server, that one runs NeoForge.
+2. **A name** for the new instance (default `Aura Server`, or `Aura Points Fabric`).
+3. **Which mods** (NeoForge only):
    - **Needed** - only what you need to join (35 mods).
    - **Server mods** - everything the server runs that also works on your side (46 mods): the needed ones plus
      Xaero's Minimap + World Map, JEI, Distant Horizons, Do a Barrel Roll, Terralith and the performance mods
@@ -34,9 +38,9 @@ Then it finds your launcher and makes a **new** instance - your existing ones ar
 
 | Launcher | What you get |
 |---|---|
-| **Prism Launcher** / **MultiMC** | a finished instance (Minecraft 1.21.1 + NeoForge 21.1.251), Aura Points auto-update already switched on. It shows up in the launcher right away. |
+| **Prism Launcher** / **MultiMC** | a finished instance (Minecraft 1.21.1 + NeoForge 21.1.251 or Fabric Loader), Aura Points auto-update already switched on. It shows up in the launcher right away. |
 | **Modrinth App** / **ATLauncher** | a `.mrpack` modpack file in your Downloads that the launcher imports |
-| **Minecraft Launcher** (official) | NeoForge installed, a new installation with its own game folder (`.minecraft/aura-instances/<name>`). Close the launcher before running the installer. |
+| **Minecraft Launcher** (official) | NeoForge or Fabric installed, a new installation with its own game folder (`.minecraft/aura-instances/<name>`). Close the launcher before running the installer. |
 | anything else | a folder with all the mods, to drop into an instance yourself |
 
 Several launchers on one computer? It lists them and you pick one. CurseForge isn't supported - use Prism
@@ -47,7 +51,29 @@ every mod with its official download link (Modrinth's CDN, FTB's own Maven for t
 [aura-points](https://github.com/ToastbutBuried/aura-points/releases) for Aura Points) and its checksum; the installer checks every file against it. It needs **Java 17+** to run - it
 uses the one that comes with Prism, the Minecraft Launcher or the Modrinth App if you have no Java of your own,
 and if there is none at all it downloads a temporary one (Eclipse Temurin 21) that's deleted afterwards. The
-installer's source is in [`installer/AuraInstaller.java`](installer/AuraInstaller.java).
+installer's source is in [`installer/AuraInstaller.java`](installer/AuraInstaller.java) (`./build.sh` builds both jars).
+
+## Run your own server: server installer
+
+On a Linux or macOS server, make an empty folder, go into it and run:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/ToastbutBuried/aura-points-installer/main/install-server.sh | bash
+```
+
+It asks **NeoForge or Fabric**, how much **memory** the server gets, whether you accept the
+[Minecraft EULA](https://aka.ms/MinecraftEULA), and whether Aura Points should **update itself on every start**.
+Then it installs the loader's server (NeoForge's own installer, or Fabric's server launcher), puts Aura Points and
+the mods it needs on a server into `mods/` (GeckoLib, Pufferfish's Skills + Attributes, and Fabric API on Fabric -
+Player Animator is client-only and left out), and writes `start.sh`. Start the server with `./start.sh`.
+
+**Already have a NeoForge or Fabric 1.21.1 server?** Run the same command in its folder: it only puts the newest
+Aura Points into `mods/` (old copies out) and adds any needed mod that is missing - your other mods, worlds and
+settings stay as they are. Running it again later is how you update by hand.
+
+It needs Java 21: it uses yours, or downloads Eclipse Temurin 21 into `java/` in the server folder (the server runs
+on it). Without questions: `... | bash -s -- --loader fabric --ram 6G --eula --yes` (also `--dir <folder>`,
+`--autoupdate no`). Players need the same loader with Aura Points on their side - the installer above sets that up.
 
 ## Auto-update setup (Prism Launcher)
 
@@ -63,9 +89,13 @@ The installer does this for you. For an instance you made yourself:
    "$INST_JAVA" -jar "$INST_DIR/aura-updater.jar" "$INST_MC_DIR/mods"
    ```
 
-That's it. On every launch it checks this repo; if there is a newer Aura Points it downloads it,
-verifies it, and replaces the old jar before the game starts. Its messages show up at the top of
-Prism's log as `[aura-updater]`.
+That's it. On every launch it checks which loader the instance uses (NeoForge or Fabric, from Prism's
+own instance file), and if there is a newer Aura Points for that loader it downloads it, verifies it, and
+replaces the old jar before the game starts. Mods Aura Points needs that are missing get added too. Its
+messages show up at the top of Prism's log as `[aura-updater]`.
+
+On a server, the server installer's `start.sh` runs it the same way (`java -jar aura-updater.jar mods --server`;
+`--server` leaves client-only mods out, `--loader neoforge|fabric` overrides the detection).
 
 It can't get in the way of playing: without internet, if GitHub is down, or if anything takes longer
 than 45 seconds, it just starts the game with the jar you already have. Old copies of the mod are
@@ -114,13 +144,14 @@ To run the mod at all (any world or server):
 | | Version |
 |---|---|
 | Minecraft | **1.21.1** |
-| NeoForge | **21.1.251** or newer 21.1.x |
+| Loader | **NeoForge 21.1.251** or newer 21.1.x, or **Fabric Loader 0.16+** with [Fabric API](https://modrinth.com/mod/fabric-api) |
 | Java | **21** (Prism picks it automatically) |
+| [GeckoLib](https://modrinth.com/mod/geckolib) | **4.9.3** or newer |
+| [Pufferfish's Skills](https://modrinth.com/mod/skills) + [Pufferfish's Attributes](https://modrinth.com/mod/attributes) | 0.19+ / 0.8.3+, on the server and every player |
 | [Player Animator](https://modrinth.com/mod/playeranimator) | **2.0.4+1.21.1** or newer - client only, for the ability animations |
 
-For `/aura redeem` and the skill trees it also needs
-[Pufferfish's Skills](https://modrinth.com/mod/skills) and [Pufferfish's Attributes](https://modrinth.com/mod/attributes)
-on the server (and so on every player too - see below). Everything else (abilities, shop, HUD, quests' Aura rewards) works without them.
+Each release has a jar per loader: `aura-points-neoforge-<version>.jar` and `aura-points-fabric-<version>.jar`.
+The installers and the updater pick the right one.
 
 ## What you need to join our server
 

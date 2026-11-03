@@ -21,21 +21,31 @@ import java.util.zip.ZipFile;
 /**
  * Keeps the Aura Points mod in a mods folder up to date. Prism runs it before every launch:
  *   "$INST_JAVA" -jar "$INST_DIR/aura-updater.jar" "$INST_MC_DIR/mods"
- * It reads latest.json from the GitHub repo ({"version", "file", "url", "sha256"}); if the mods folder
- * doesn't hold exactly that jar, it downloads it, checks the SHA-256, puts it in, and only then removes
- * every other copy of the mod (found by its mod id, whatever the file is called).
+ * A server's start script runs it the same way, with --server.
+ *
+ * It works out the mod loader first (NeoForge or Fabric: from Prism's mmc-pack.json, a server's own files,
+ * or the jars already in the folder; --loader neoforge|fabric overrides it) and reads that loader's manifest
+ * from the GitHub repo (latest.json for NeoForge, latest-fabric.json for Fabric: {"version", "file", "url",
+ * "sha256", "requires"}). If the mods folder doesn't hold exactly that jar, it downloads it, checks the SHA-256,
+ * puts it in, and only then removes every other copy of the mod (found by its mod id, whatever it is called).
+ *
+ * Usage: java -jar aura-updater.jar <mods folder> [manifest url] [--loader neoforge|fabric] [--server]
  *
  * It never stops the game from starting: every problem (offline, GitHub down, a locked file) is only
  * printed, the exit code is always 0, and a watchdog ends it after WATCHDOG_SECONDS no matter what.
  */
 public final class AuraUpdater {
 
-	static final String DEFAULT_MANIFEST = "https://raw.githubusercontent.com/ToastbutBuried/aura-points/main/latest.json";
+	static final String MANIFESTS = "https://raw.githubusercontent.com/ToastbutBuried/aura-points/main/";
 	static final String MOD_ID = "aurapoints";
 	static final int WATCHDOG_SECONDS = 45;
 	static final String TMP = ".aura-points-download.tmp"; // not a .jar, so the game never loads it half-written
 
 	static volatile Path mods;
+	/** "neoforge" or "fabric" */
+	static String loader;
+	/** a dedicated server: client-only mods (Player Animator) are left out */
+	static boolean server;
 
 	public static void main(String[] args) {
 		// whatever happens below, the launch goes on within WATCHDOG_SECONDS
@@ -52,11 +62,24 @@ public final class AuraUpdater {
 		watchdog.setDaemon(true);
 		watchdog.start();
 		try {
-			if (args.length < 1) {
-				log("usage: java -jar aura-updater.jar <mods folder> [latest.json url]");
+			List<String> pos = new ArrayList<>();
+			String forced = null;
+			for (int i = 0; i < args.length; i++) {
+				if (args[i].equals("--server")) server = true;
+				else if (args[i].equals("--loader") && i + 1 < args.length) forced = args[++i].toLowerCase(java.util.Locale.ROOT);
+				else pos.add(args[i]);
+			}
+			if (pos.isEmpty()) {
+				log("usage: java -jar aura-updater.jar <mods folder> [manifest url] [--loader neoforge|fabric] [--server]");
 			} else {
-				mods = Path.of(args[0]);
-				run(args.length > 1 ? args[1] : DEFAULT_MANIFEST);
+				mods = Path.of(pos.get(0)).toAbsolutePath().normalize();
+				if (!server) server = looksLikeServer();
+				loader = forced != null ? forced : detectLoader();
+				if (!loader.equals("neoforge") && !loader.equals("fabric")) throw new IllegalStateException("unknown loader " + loader);
+				String manifest = pos.size() > 1 ? pos.get(1) : MANIFESTS + "latest.json";
+				if (loader.equals("fabric") && manifest.endsWith("/latest.json")) manifest = manifest.replaceAll("latest\\.json$", "latest-fabric.json");
+				log((loader.equals("fabric") ? "Fabric" : "NeoForge") + (server ? " server" : "") + " instance");
+				run(manifest);
 			}
 		} catch (Throwable t) {
 			log("skipped (" + t.getClass().getSimpleName() + (t.getMessage() == null ? "" : ": " + t.getMessage())
@@ -78,6 +101,8 @@ public final class AuraUpdater {
 		if (manifest.statusCode() != 200) throw new IllegalStateException("latest.json returned HTTP " + manifest.statusCode());
 		String json = manifest.body();
 		String version = field(json, "version"), file = field(json, "file"), url = field(json, "url"), sha = field(json, "sha256");
+		String forLoader = optField(json, "loader");
+		if (forLoader != null && !forLoader.equals(loader)) throw new IllegalStateException("that manifest is for " + forLoader + ", this instance is " + loader);
 		if (!file.matches("aura-points-[A-Za-z0-9.+_-]+\\.jar")) throw new IllegalStateException("odd file name in latest.json: " + file);
 		if (!sha.matches("[0-9a-fA-F]{64}")) throw new IllegalStateException("odd checksum in latest.json");
 		if (!url.startsWith("https://") && !url.startsWith("http://127.0.0.1")) throw new IllegalStateException("download url must be https");
@@ -128,7 +153,8 @@ public final class AuraUpdater {
 			String o = obj.group();
 			try {
 				String modid = field(o, "modid"), name = field(o, "name"), file = field(o, "file"), url = field(o, "url"), sha = field(o, "sha256");
-				if (!modid.matches("[a-z0-9_]+") || !file.matches("[A-Za-z0-9.+_-]+\\.jar") || !sha.matches("[0-9a-fA-F]{64}")
+				if ("client".equals(optField(o, "side")) && server) continue;
+				if (!modid.matches("[a-z0-9_-]+") || !file.matches("[A-Za-z0-9.+_-]+\\.jar") || !sha.matches("[0-9a-fA-F]{64}")
 						|| !url.startsWith("https://")) throw new IllegalStateException("odd entry");
 				if (hasMod(modid)) continue;
 				log("downloading " + name + " (needed by Aura Points) ...");
@@ -157,17 +183,87 @@ public final class AuraUpdater {
 		return false;
 	}
 
+	/** The jar declares this mod id: neoforge.mods.toml modId, or fabric.mod.json id / provides. */
 	static boolean declares(Path jar, String modid) {
 		try (ZipFile zip = new ZipFile(jar.toFile())) {
-			ZipEntry toml = zip.getEntry("META-INF/neoforge.mods.toml");
-			if (toml == null) return false;
-			try (InputStream in = zip.getInputStream(toml)) {
-				String text = new String(in.readAllBytes(), StandardCharsets.UTF_8);
-				return Pattern.compile("modId\\s*=\\s*\"" + Pattern.quote(modid) + "\"").matcher(text).find();
-			}
+			String q = Pattern.quote(modid);
+			String toml = entry(zip, "META-INF/neoforge.mods.toml");
+			if (toml != null && tomlDeclares(toml, modid)) return true;
+			String fmj = entry(zip, "fabric.mod.json");
+			return fmj != null && (Pattern.compile("\"id\"\\s*:\\s*\"" + q + "\"").matcher(fmj).find()
+					|| Pattern.compile("\"provides\"\\s*:\\s*\\[[^\\]]*\"" + q + "\"").matcher(fmj).find());
 		} catch (Exception e) {
-			return false;
+			return false; // not a readable jar - not ours to touch
 		}
+	}
+
+	/** modId = "x" inside a [[mods]] table - not the [[dependencies.*]] ones, which name other mods. */
+	static boolean tomlDeclares(String toml, String modid) {
+		boolean inMods = false;
+		for (String line : toml.split("\\R")) {
+			String t = line.trim();
+			if (t.startsWith("[")) inMods = t.replace(" ", "").equals("[[mods]]");
+			else if (inMods && Pattern.compile("^modId\\s*=\\s*[\"']" + Pattern.quote(modid) + "[\"']").matcher(t).find()) return true;
+		}
+		return false;
+	}
+
+	static String entry(ZipFile zip, String name) throws Exception {
+		ZipEntry e = zip.getEntry(name);
+		if (e == null) return null;
+		try (InputStream in = zip.getInputStream(e)) {
+			return new String(in.readAllBytes(), StandardCharsets.UTF_8);
+		}
+	}
+
+	// ---- which loader, which side ----
+
+	/**
+	 * Prism/MultiMC: mmc-pack.json in the instance folder (two up from mods). A server: its launcher files next to
+	 * mods. Anything else: whichever loader most jars in the folder are made for. NeoForge if nothing says.
+	 */
+	static String detectLoader() {
+		Path mc = mods.getParent(), inst = mc == null ? null : mc.getParent();
+		for (Path dir : new Path[]{inst, mc}) {
+			if (dir == null) continue;
+			try {
+				Path pack = dir.resolve("mmc-pack.json");
+				if (Files.isRegularFile(pack)) {
+					String s = Files.readString(pack);
+					if (s.contains("\"net.neoforged\"")) return "neoforge";
+					if (s.contains("\"net.fabricmc.fabric-loader\"") || s.contains("\"org.quiltmc.quilt-loader\"")) return "fabric";
+				}
+			} catch (Exception ignored) {
+				// fall through to the other checks
+			}
+		}
+		if (mc != null) {
+			if (Files.exists(mc.resolve("fabric-server-launch.jar")) || Files.isDirectory(mc.resolve(".fabric"))) return "fabric";
+			if (Files.isDirectory(mc.resolve("libraries/net/neoforged"))) return "neoforge";
+		}
+		int neo = 0, fabric = 0;
+		try (DirectoryStream<Path> jars = Files.newDirectoryStream(mods, "*.jar")) {
+			for (Path p : jars) {
+				try (ZipFile zip = new ZipFile(p.toFile())) {
+					// NeoForge first: Forgified Fabric API style jars carry both files
+					if (zip.getEntry("META-INF/neoforge.mods.toml") != null) neo++;
+					else if (zip.getEntry("fabric.mod.json") != null) fabric++;
+				} catch (Exception ignored) {
+					// not a jar
+				}
+			}
+		} catch (Exception ignored) {
+			// no answer from the jars
+		}
+		return fabric > neo ? "fabric" : "neoforge";
+	}
+
+	/** A dedicated server folder: server.properties / eula.txt / a server launcher next to mods. */
+	static boolean looksLikeServer() {
+		Path dir = mods.getParent();
+		if (dir == null || Files.isRegularFile(dir.resolve("options.txt"))) return false;
+		return Files.isRegularFile(dir.resolve("server.properties")) || Files.isRegularFile(dir.resolve("eula.txt"))
+				|| Files.exists(dir.resolve("fabric-server-launch.jar"));
 	}
 
 	/** Every other copy of the mod goes: any .jar whose mod id is aurapoints, whatever it is named. */
@@ -184,19 +280,10 @@ public final class AuraUpdater {
 		}
 	}
 
+	/** Any copy of the mod, for either loader (a NeoForge jar in a Fabric folder goes too). */
 	static boolean isAuraPoints(Path jar) {
 		String name = jar.getFileName().toString().toLowerCase(java.util.Locale.ROOT);
-		if (name.startsWith("aura-points-")) return true;
-		try (ZipFile zip = new ZipFile(jar.toFile())) {
-			ZipEntry toml = zip.getEntry("META-INF/neoforge.mods.toml");
-			if (toml == null) return false;
-			try (InputStream in = zip.getInputStream(toml)) {
-				String text = new String(in.readAllBytes(), StandardCharsets.UTF_8);
-				return Pattern.compile("modId\\s*=\\s*\"" + MOD_ID + "\"").matcher(text).find();
-			}
-		} catch (Exception e) {
-			return false; // not a readable jar - not ours to touch
-		}
+		return name.startsWith("aura-points-") || declares(jar, MOD_ID);
 	}
 
 	static void cleanTmp() {
@@ -211,6 +298,11 @@ public final class AuraUpdater {
 		Matcher m = Pattern.compile("\"" + key + "\"\\s*:\\s*\"([^\"]*)\"").matcher(json);
 		if (!m.find()) throw new IllegalStateException("latest.json has no " + key);
 		return m.group(1);
+	}
+
+	static String optField(String json, String key) {
+		Matcher m = Pattern.compile("\"" + key + "\"\\s*:\\s*\"([^\"]*)\"").matcher(json);
+		return m.find() ? m.group(1) : null;
 	}
 
 	static String sha256(Path p) throws Exception {

@@ -1,0 +1,7 @@
+[
+    {"modid": "fabric-api", "name": "Fabric API", "side": "both", "file": "fabric-api-0.116.17+1.21.1.jar", "url": "https://cdn.modrinth.com/data/P7dR8mSH/versions/Mys3P7lK/fabric-api-0.116.17%2B1.21.1.jar", "sha256": "79ac44b40780acbd884b34c50be1e39af682847e5f5cb3b1fddeeaa768dce800"},
+    {"modid": "geckolib", "name": "GeckoLib", "side": "both", "file": "geckolib-fabric-1.21.1-4.9.3.jar", "url": "https://cdn.modrinth.com/data/8BmcQJ2H/versions/tmxM7U4W/geckolib-fabric-1.21.1-4.9.3.jar", "sha256": "70186c70660e8de6c58f5b28625f71ae9e80eb0ad81b5d47b62fd5809bef2ee0"},
+    {"modid": "puffish_skills", "name": "Pufferfish's Skills", "side": "both", "file": "puffish_skills-0.19.2-1.21-fabric.jar", "url": "https://cdn.modrinth.com/data/hqQqvaa4/versions/ppOVyisF/puffish_skills-0.19.2-1.21-fabric.jar", "sha256": "276ce0b5f15bcfeafe632c8eabe0d2d3104b9b0362897e66fd049bcd217ba915"},
+    {"modid": "puffish_attributes", "name": "Pufferfish's Attributes", "side": "both", "file": "puffish_attributes-0.8.3-1.21-fabric.jar", "url": "https://cdn.modrinth.com/data/FCFcFw09/versions/969uN2vX/puffish_attributes-0.8.3-1.21-fabric.jar", "sha256": "25c101416229757cd7a63e0bb1b4907a079928c313101f9d19cf9245c9386389"},
+    {"modid": "playeranimator", "name": "Player Animator", "side": "client", "file": "player-animation-lib-fabric-2.0.4+1.21.1.jar", "url": "https://cdn.modrinth.com/data/gedNE4y2/versions/CkedfDp3/player-animation-lib-fabric-2.0.4%2B1.21.1.jar", "sha256": "86ef8a23a5bc8f86d67ed37f3a93380d3946bad64123b22862ed057e7b624efd"}
+  ]
