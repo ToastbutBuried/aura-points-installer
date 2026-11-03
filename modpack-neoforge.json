@@ -1,5 +1,5 @@
 {
-  "_info": "Mod list for the Aura Points server. install.sh / install.ps1 read this. set 'needed' = required to join, 'server' = the rest of the server's mods that also run on a client. Aura Points itself comes from latest.json.",
+  "_info": "NeoForge mod list for the Aura Points server. install.sh / install.ps1 read this. set 'needed' = required to join, 'server' = the rest of the server's mods that also run on a client. Aura Points itself comes from latest-neoforge.json in ToastbutBuried/aura-points.",
   "minecraft": "1.21.1",
   "neoforge": "21.1.251",
   "mods": [

@@ -25,11 +25,12 @@ import java.util.zip.ZipFile;
  *
  * It works out the mod loader first (NeoForge or Fabric: from Prism's mmc-pack.json, a server's own files,
  * or the jars already in the folder; --loader neoforge|fabric overrides it) and reads that loader's manifest
- * from the GitHub repo (latest.json for NeoForge, latest-fabric.json for Fabric: {"version", "file", "url",
+ * from the GitHub repo (latest-neoforge.json or latest-fabric.json: {"version", "file", "url",
  * "sha256", "requires"}). If the mods folder doesn't hold exactly that jar, it downloads it, checks the SHA-256,
  * puts it in, and only then removes every other copy of the mod (found by its mod id, whatever it is called).
  *
- * Usage: java -jar aura-updater.jar <mods folder> [manifest url] [--loader neoforge|fabric] [--server]
+ * Usage: java -jar aura-updater.jar <mods folder> [manifest folder url] [--loader neoforge|fabric] [--server]
+ * (latest.json in the repo is only a copy of latest-neoforge.json for updaters older than this one.)
  *
  * It never stops the game from starting: every problem (offline, GitHub down, a locked file) is only
  * printed, the exit code is always 0, and a watchdog ends it after WATCHDOG_SECONDS no matter what.
@@ -70,14 +71,14 @@ public final class AuraUpdater {
 				else pos.add(args[i]);
 			}
 			if (pos.isEmpty()) {
-				log("usage: java -jar aura-updater.jar <mods folder> [manifest url] [--loader neoforge|fabric] [--server]");
+				log("usage: java -jar aura-updater.jar <mods folder> [manifest folder url] [--loader neoforge|fabric] [--server]");
 			} else {
 				mods = Path.of(pos.get(0)).toAbsolutePath().normalize();
 				if (!server) server = looksLikeServer();
 				loader = forced != null ? forced : detectLoader();
 				if (!loader.equals("neoforge") && !loader.equals("fabric")) throw new IllegalStateException("unknown loader " + loader);
-				String manifest = pos.size() > 1 ? pos.get(1) : MANIFESTS + "latest.json";
-				if (loader.equals("fabric") && manifest.endsWith("/latest.json")) manifest = manifest.replaceAll("latest\\.json$", "latest-fabric.json");
+				String base = pos.size() > 1 ? pos.get(1) : MANIFESTS;
+				String manifest = (base.endsWith("/") ? base : base + "/") + "latest-" + loader + ".json";
 				log((loader.equals("fabric") ? "Fabric" : "NeoForge") + (server ? " server" : "") + " instance");
 				run(manifest);
 			}
@@ -95,16 +96,16 @@ public final class AuraUpdater {
 		HttpClient http = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(5))
 				.followRedirects(HttpClient.Redirect.NORMAL).build();
 
-		// a query string so GitHub's raw cache never hands out an old latest.json
+		// a query string so GitHub's raw cache never hands out an old manifest
 		HttpResponse<String> manifest = http.send(HttpRequest.newBuilder(URI.create(manifestUrl + "?t=" + System.currentTimeMillis()))
 				.timeout(Duration.ofSeconds(10)).build(), HttpResponse.BodyHandlers.ofString());
-		if (manifest.statusCode() != 200) throw new IllegalStateException("latest.json returned HTTP " + manifest.statusCode());
+		if (manifest.statusCode() != 200) throw new IllegalStateException(manifest.uri().getPath() + " returned HTTP " + manifest.statusCode());
 		String json = manifest.body();
 		String version = field(json, "version"), file = field(json, "file"), url = field(json, "url"), sha = field(json, "sha256");
 		String forLoader = optField(json, "loader");
 		if (forLoader != null && !forLoader.equals(loader)) throw new IllegalStateException("that manifest is for " + forLoader + ", this instance is " + loader);
-		if (!file.matches("aura-points-[A-Za-z0-9.+_-]+\\.jar")) throw new IllegalStateException("odd file name in latest.json: " + file);
-		if (!sha.matches("[0-9a-fA-F]{64}")) throw new IllegalStateException("odd checksum in latest.json");
+		if (!file.matches("aura-points-[A-Za-z0-9.+_-]+\\.jar")) throw new IllegalStateException("odd file name in the manifest: " + file);
+		if (!sha.matches("[0-9a-fA-F]{64}")) throw new IllegalStateException("odd checksum in the manifest");
 		if (!url.startsWith("https://") && !url.startsWith("http://127.0.0.1")) throw new IllegalStateException("download url must be https");
 
 		// mods Aura Points needs (e.g. GeckoLib): installed if missing, never removed or swapped
@@ -141,7 +142,7 @@ public final class AuraUpdater {
 	}
 
 	/**
-	 * latest.json may end with "requires": [{"modid", "name", "file", "url", "sha256"}, ...] - mods the new Aura Points
+	 * The manifest may end with "requires": [{"modid", "name", "file", "url", "sha256"}, ...] - mods the new Aura Points
 	 * needs. Each one whose mod id no jar in the mods folder has is downloaded (checksum checked) and put in. A mod
 	 * that is already there in any version is left alone. One failing doesn't stop the others or Aura Points.
 	 */
@@ -296,7 +297,7 @@ public final class AuraUpdater {
 
 	static String field(String json, String key) {
 		Matcher m = Pattern.compile("\"" + key + "\"\\s*:\\s*\"([^\"]*)\"").matcher(json);
-		if (!m.find()) throw new IllegalStateException("latest.json has no " + key);
+		if (!m.find()) throw new IllegalStateException("the manifest has no " + key);
 		return m.group(1);
 	}
 

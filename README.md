@@ -1,7 +1,7 @@
 # Aura Points
 
 An installer that sets up a ready-to-join instance of our server's modpack in your launcher (or plain Aura Points on
-Fabric), a server installer, and a small updater that keeps everyone's Aura Points current. The mod itself (source, releases, `latest.json`) lives in
+Fabric), a server installer, and a small updater that keeps everyone's Aura Points current. The mod itself (source, releases, `latest-neoforge.json` / `latest-fabric.json`) lives in
 [ToastbutBuried/aura-points](https://github.com/ToastbutBuried/aura-points).
 
 **How do I get Aura?** See the [full quest list and other Aura sources](https://github.com/ToastbutBuried/aura-points/blob/main/QUESTS.md).
@@ -46,7 +46,7 @@ Then it finds your launcher and makes a **new** instance - your existing ones ar
 Several launchers on one computer? It lists them and you pick one. CurseForge isn't supported - use Prism
 (https://prismlauncher.org), it's the easiest.
 
-**What it downloads, and from where:** no mod files are stored in this repo. [`modpack.json`](modpack.json) lists
+**What it downloads, and from where:** no mod files are stored in this repo. [`modpack-neoforge.json`](modpack-neoforge.json) lists
 every mod with its official download link (Modrinth's CDN, FTB's own Maven for the FTB mods, the releases of
 [aura-points](https://github.com/ToastbutBuried/aura-points/releases) for Aura Points) and its checksum; the installer checks every file against it. It needs **Java 17+** to run - it
 uses the one that comes with Prism, the Minecraft Launcher or the Modrinth App if you have no Java of your own,

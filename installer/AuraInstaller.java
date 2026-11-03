@@ -27,7 +27,7 @@ import java.util.zip.ZipOutputStream;
 /**
  * Aura Points installer. Asks for an instance name and a mod loader:
  *  - NeoForge: our server's modpack, with a mod set ("needed" = just what you need to join, "server" =
- *    everything the server runs that also works on your side; links and checksums in modpack.json),
+ *    everything the server runs that also works on your side; links and checksums in modpack-neoforge.json),
  *  - Fabric: Aura Points alone with what it needs (latest-fabric.json), for singleplayer or a Fabric server.
  * Then finds the launchers on this computer (Prism, MultiMC, Modrinth App, ATLauncher, the official launcher),
  * downloads every mod from its official source (no mod jars live in the repo) and creates a new instance.
@@ -43,7 +43,7 @@ import java.util.zip.ZipOutputStream;
 public final class AuraInstaller {
 
 	static final String REPO_RAW = "https://raw.githubusercontent.com/ToastbutBuried/aura-points-installer/main/";
-	/** The update manifests (latest.json = NeoForge, latest-fabric.json) live next to the mod's source, written by every release. */
+	/** The update manifests (latest-neoforge.json, latest-fabric.json) live next to the mod's source, written by every release. */
 	static final String LATEST = "https://raw.githubusercontent.com/ToastbutBuried/aura-points/main/";
 	static final String UA = "ToastbutBuried/aura-points-installer";
 	static final HttpClient HTTP = HttpClient.newBuilder().followRedirects(HttpClient.Redirect.NORMAL)
@@ -93,11 +93,11 @@ public final class AuraInstaller {
 		}
 	}
 
-	/** latest.json (NeoForge) or latest-fabric.json. */
+	/** latest-neoforge.json or latest-fabric.json. */
 	static Map<String, Object> latest(String loader) throws Exception {
 		String base = ARGS.getOrDefault("latest", LATEST);
 		if (!base.endsWith("/")) base += "/";
-		return obj(Json.parse(text(base + (loader.equals("fabric") ? "latest-fabric.json" : "latest.json"))));
+		return obj(Json.parse(text(base + "latest-" + loader + ".json")));
 	}
 
 	static String pickLoader(String question) throws IOException {
@@ -137,7 +137,7 @@ public final class AuraInstaller {
 		System.out.println();
 
 		// the mod list and the newest Aura Points
-		Map<String, Object> pack = obj(Json.parse(text(ARGS.getOrDefault("manifest", REPO_RAW + "modpack.json"))));
+		Map<String, Object> pack = obj(Json.parse(text(ARGS.getOrDefault("manifest", REPO_RAW + "modpack-neoforge.json"))));
 		Map<String, Object> latest = latest("neoforge");
 		Loader loader = new Loader("neoforge", str(pack.get("minecraft")), str(pack.get("neoforge")));
 		List<Map<String, Object>> all = new ArrayList<>();
@@ -236,7 +236,7 @@ public final class AuraInstaller {
 				String file = str(m.get("file")), url = str(m.get("url"));
 				if (!file.matches("[A-Za-z0-9.+_-]+\\.jar")) throw new IOException("odd file name " + file);
 				Path p = dir.resolve(file);
-				// modpack.json lists SHA-1s, the latest*.json "requires" SHA-256s
+				// modpack-neoforge.json lists SHA-1s, the latest-*.json "requires" SHA-256s
 				byte[] data = m.get("sha1") != null ? fetchVerified(url, "SHA-1", str(m.get("sha1")), file)
 						: fetchVerified(url, "SHA-256", str(m.get("sha256")), file);
 				Files.write(p, data);
